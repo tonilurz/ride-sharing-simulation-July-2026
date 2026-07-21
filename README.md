@@ -216,7 +216,7 @@ Creates one Rider object
 Stores both objects in the Simulation dictionaries
 Prints the Car, Rider, Simulation, and Graph objects
 
-Example output:
+# Example output:
 
 Creating simulation and loading map...
 
@@ -246,7 +246,7 @@ Calculating optimal routes between riders and destinations
 Simulating vehicle movement through the road network
 Measuring algorithm performance and efficiency using Big-O analysis
 
-I would also recommend updating the Project Structure section of your README to reflect the new files:
+New Project File Structure
 
 ride_sharing_simulator/
 │
@@ -259,4 +259,3 @@ ride_sharing_simulator/
 ├── README.md           # Project documentation
 └── .gitignore
 
-This gives your README a polished, professional feel and clearly documents the additions made in this milestone.
