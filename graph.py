@@ -18,7 +18,7 @@ class Graph:
         """
         if vertex not in self.adjacency_list:
             self.adjacency_list[vertex] =[]
-            print(f"Vertex '[vertex]' added.")
+            print(f"Vertex '{vertex}' added.")
 
     def add_edge(self, start_node, end_node, weight):
         """
