@@ -1,262 +1,440 @@
 # Ride-Sharing Simulator
 
-## Project Title
+## MS549 – Data Structures and Testing
+### University of Advancing Technology
 
-Ride-Sharing Simulator
+**Author:** Antoinette (Toni) Lurz
 
-## Purpose / Design
+---
 
-This project is the foundation of a ride-sharing simulation developed in Python using object-oriented programming principles. The first milestone focuses on creating the core classes that represent the vehicles, riders, and the simulation environment. These classes will serve as the building blocks for future milestones, where additional algorithms, data structures, and event-driven simulation features will be added.
+# Project Overview
 
-The project is designed with modularity in mind by separating each class into its own Python file. Cars and riders are stored in dictionaries using their unique IDs as keys, allowing efficient object lookup and preparing the system for future performance analysis using Big O notation.
+The Ride-Sharing Simulator is a semester-long project designed to demonstrate object-oriented programming, data structures, algorithms, and software engineering principles using Python.
 
-## Project Structure
+The simulator models a ride-sharing service by creating vehicles, riders, a road network, and intelligent pathfinding. Each milestone builds upon the previous one, gradually adding more sophisticated functionality while reinforcing efficient data structures and algorithm design.
 
-```text
+---
+
+# Technologies Used
+
+- Python 3
+- Visual Studio Code
+- Git
+- GitHub
+
+Python Standard Libraries
+
+- csv
+- heapq
+
+---
+
+# Project Structure
+
+```
 ride_sharing_simulator/
 │
 ├── car.py
 ├── rider.py
+├── graph.py
 ├── simulation.py
+├── pathfinder.py
+│
 ├── test_simulation.py
+├── test_dijkstra.py
+│
+├── map.csv
 ├── README.md
 └── .gitignore
 ```
 
+---
+
+# Milestone 1
+## Object-Oriented Design
+
+### Objective
+
+Create the core objects used by the simulator.
+
 ### Files
 
-* **car.py** - Contains the `Car` class, which represents a vehicle in the ride-sharing fleet.
-* **rider.py** - Contains the `Rider` class, which represents a customer requesting transportation.
-* **simulation.py** - Contains the `Simulation` class, which manages collections of cars and riders.
-* **test_simulation.py** - Creates sample objects and verifies that the classes function correctly.
-* **README.md** - Project documentation.
+- car.py
+- rider.py
+- simulation.py
+- test_simulation.py
 
-## Object Design
+### Features
 
-### Car Class
+#### Car Class
 
-Each `Car` object contains:
+Stores information about each vehicle.
 
-* Unique car ID
-* Current location as an `(x, y)` tuple
-* Current status
-* Destination
+Attributes
 
-The default status is **"available"**, and the destination is initialized to **None**.
+- id
+- location
+- status
+- destination
 
-### Rider Class
+Methods
 
-Each `Rider` object contains:
+- __init__()
+- __str__()
 
-* Unique rider ID
-* Pickup location
-* Destination location
-* Current status
+---
 
-The default rider status is **"waiting"**.
+#### Rider Class
 
-### Simulation
+Represents customers requesting rides.
 
-The `Simulation` class maintains two dictionaries:
+Attributes
 
-* `cars` – stores `Car` objects using the car ID as the key.
-* `riders` – stores `Rider` objects using the rider ID as the key.
+- id
+- start_location
+- destination
+- status
 
-Using dictionaries allows efficient retrieval of objects by their unique IDs and supports future algorithm development.
+Methods
 
-## How to Run
+- __init__()
+- __str__()
 
-1. Download or clone this repository.
-2. Open the project folder in Visual Studio Code.
-3. (Optional but recommended) Create and activate a Python virtual environment.
+---
 
-### Create a Virtual Environment
+#### Simulation Class
 
-Windows PowerShell:
+Controls the ride-sharing simulation.
 
-```powershell
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-```
+Stores
 
-Windows Command Prompt:
+- Cars
+- Riders
 
-```cmd
-python -m venv venv
-venv\Scripts\activate
-```
+Both are stored using Python dictionaries for efficient O(1) lookups.
 
-4. Run the test script:
+---
+
+### Test
+
+Run:
 
 ```bash
 python test_simulation.py
 ```
-If your system uses the Python launcher instead of `python`, run:
 
-```bash
-py test_simulation.py
-```
+---
 
-## Sample Output
-```text
-Car CAR001 at (10, 5) - Status: available
-Rider RIDER_A at (1, 2) waiting for ride to (20, 15)
-Simulation with 1 car(s) and 1 rider(s)
-```
+# Milestone 2
+## Graph Class
 
-## Dependencies
-This milestone uses only the Python Standard Library.
-No external libraries are required.
+### Objective
 
-## Future Enhancements
+Create a city road network using an adjacency list.
 
-Future milestones will expand this project by adding:
+### Files Added
 
-* Driver assignment algorithms
-* Ride request processing
-* Pathfinding algorithms
-* Event-driven simulation
-* Performance analysis using Big O notation
-* Additional data structures for efficient searching and scheduling
-* Automated testing and benchmarking
+- graph.py
+- map.csv
 
-## Author
-**Antoinette (Toni) Lurz**
-Master of Science Student
-University of Advancing Technology (UAT)
+### Graph Design
 
+The city map is stored using an adjacency list.
 
-Milestone 2: Graph Integration
-Overview
+Example
 
-In this milestone, the Ride-Sharing Simulator was expanded by adding a Graph class that represents the city road network. The graph uses an adjacency list to efficiently store intersections and the roads that connect them. The graph is automatically loaded from a CSV file when the simulation begins.
-
-# New Files
-graph.py
-
-The Graph class represents the city map.
-
-It includes the following methods:
-
-* __init__()
-Creates an empty adjacency list using a  Python dictionary.
-* add_vertex()
-Adds a vertex to the graph if it does not already exist.
-* add_edge()
-Creates a directed, weighted connection between two vertices.
-* load_from_file()
-Reads the road network from a CSV file and builds the graph.
-* __str__()
-Displays the adjacency list in a readable format for testing and debugging.
-
-# Data Structure Selection
-
-The Graph class stores the city map as an adjacency list.
-
+```python
 {
     "A": [("B", 5), ("C", 3)],
-    "B": [("D", 4)]
+    "B": [("A", 5), ("D", 4)],
+    "C": [("A", 3), ("D", 1)]
 }
+```
 
-An adjacency list was selected because road networks are considered sparse graphs, meaning each intersection connects to only a few nearby intersections instead of every location in the city.
+### Why an Adjacency List?
 
-Using an adjacency list provides:
+Road networks are sparse graphs.
 
-* Efficient storage
-* Fast neighbor lookups
-* Excellent support for graph algorithms  * such as Dijkstra's algorithm
+Using an adjacency list provides
 
-# Map File
+- efficient storage
+- fast neighbor lookup
+- ideal support for pathfinding algorithms
 
-The road network is stored in a CSV file named:
+### Graph Methods
 
-city_map.csv
+- __init__()
+- add_vertex()
+- add_edge()
+- load_from_file()
+- __str__()
 
-Example:
+---
 
-Start,End,Weight
-A,B,5
-B,A,5
-A,C,3
-C,A,3
-B,D,4
-D,B,4
-C,D,1
-D,C,1
+### Simulation Update
 
-Each row contains:
+The Simulation class now creates and stores a Graph object.
 
-Starting intersection
-Destination intersection
-Road weight or distance
+During initialization the simulation loads the road network directly from map.csv.
 
-# Simulation Updates
-
-The Simulation class has been updated to automatically create and load the Graph object during initialization.
-
+```python
 self.map = Graph()
 self.map.load_from_file(map_filename)
+```
 
-This ensures the city map is available whenever the simulation begins.
+---
 
-The Simulation class continues to maintain dictionaries for Cars and Riders, allowing objects to be located quickly using their unique IDs.
+### Test
 
-# Testing
+Run
 
-The project is tested using:
+```bash
+python test_simulation.py
+```
 
-test_simulation.py
+The test verifies
 
-The test program performs the following actions:
+- Graph loads correctly
+- Simulation initializes correctly
+- Adjacency list prints successfully
 
-Creates a Simulation object
-Loads the city map from the CSV file
-Creates one Car object
-Creates one Rider object
-Stores both objects in the Simulation dictionaries
-Prints the Car, Rider, Simulation, and Graph objects
+---
 
-# Example output:
+# Milestone 3
+## Dijkstra's Shortest Path Algorithm
 
-Creating simulation and loading map...
+### Objective
 
-Map loaded successfully.
+Allow vehicles to calculate the shortest route through the city.
 
-Car CAR001 at (10, 5) - Status: available
+### Files Added
 
-Rider RIDER_A at (1, 2) waiting for ride to (20, 15)
+- pathfinder.py
+- test_dijkstra.py
 
-Simulation loaded successfully.
-Cars: 1
-Riders: 1
-Map nodes: 4
+### Dijkstra's Algorithm
 
-Adjacency List
-A -> [('B', 5), ('C', 3)]
-B -> [('A', 5), ('D', 4)]
-C -> [('A', 3), ('D', 1)]
-D -> [('B', 4), ('C', 1)]
-# Future Enhancements
+The simulator now includes an implementation of Dijkstra's Shortest Path Algorithm.
 
-The Graph class establishes the foundation for future milestones, which may include:
+Function
 
-Implementing Dijkstra's Shortest Path Algorithm
-Finding the nearest available driver
-Calculating optimal routes between riders and destinations
-Simulating vehicle movement through the road network
-Measuring algorithm performance and efficiency using Big-O analysis
+```python
+find_the_shortest_path(graph, start_node, end_node)
+```
 
-I would also recommend updating the Project Structure section of your README to reflect the new files:
+Returns
 
-ride_sharing_simulator/
-│
-├── car.py              # Car class
-├── rider.py            # Rider class
-├── graph.py            # City map stored as an adjacency list
-├── simulation.py       # Main simulation controller
-├── test_simulation.py  # Test program
-├── city_map.csv        # Sample road network
-├── README.md           # Project documentation
-└── .gitignore
+```python
+(path, total_travel_time)
+```
 
-This gives your README a polished, professional feel and clearly documents the additions made in this milestone.
+Example
+
+```python
+(['A', 'C', 'D'], 4.0)
+```
+
+If no route exists
+
+```python
+(None, float("inf"))
+```
+
+---
+
+### Priority Queue
+
+Python's heapq module is used to implement a min-heap priority queue.
+
+Items are stored as
+
+```python
+(distance, node)
+```
+
+The smallest distance is always processed first.
+
+---
+
+### Data Structures
+
+The algorithm uses
+
+- Distance Dictionary
+- Predecessor Dictionary
+- Priority Queue
+- Adjacency List
+
+These structures work together to efficiently calculate the shortest route.
+
+---
+
+### Big-O Performance
+
+Using an adjacency list and priority queue gives Dijkstra's Algorithm a time complexity of
+
+```
+O((V + E) log V)
+```
+
+Where
+
+V = Vertices
+
+E = Edges
+
+---
+
+### Test
+
+Run
+
+```bash
+python test_dijkstra.py
+```
+
+Example Output
+
+```text
+DIJKSTRA TEST
+
+Start Node: A
+Destination: D
+
+Shortest Path:
+['A', 'C', 'D']
+
+Total Travel Time:
+4.0
+```
+
+---
+
+# Milestone 4
+## Route Planning in the Car Class
+
+### Objective
+
+Allow each Car object to calculate and remember its own route.
+
+### Updated File
+
+- car.py
+
+### New Method
+
+```python
+calculate_route(destination, graph)
+```
+
+The method
+
+- Uses the car's current location
+- Runs Dijkstra's Algorithm
+- Calculates the shortest route
+- Stores the results
+
+New attributes
+
+```python
+self.route
+self.route_time
+```
+
+Example
+
+```python
+Car ID:
+CAR001
+
+Route:
+['A', 'C', 'D']
+
+Travel Time:
+4.0
+```
+
+Each car now remembers its planned route instead of recalculating it repeatedly.
+
+---
+
+# How to Run
+
+## Test Milestone 1 & 2
+
+```bash
+python test_simulation.py
+```
+
+Tests
+
+- Car
+- Rider
+- Graph
+- Simulation
+
+---
+
+## Test Milestone 3
+
+```bash
+python test_dijkstra.py
+```
+
+Tests
+
+- Graph loading
+- Dijkstra's Algorithm
+- Shortest path calculation
+
+---
+
+## Future Milestones
+
+Future enhancements include
+
+- Driver assignment
+- Rider dispatch
+- Multiple ride requests
+- Vehicle movement
+- Dynamic traffic
+- Performance analysis
+- Algorithm benchmarking
+
+---
+
+# GitHub Repository
+
+The complete project, including source code, documentation, and test scripts, is maintained in a public GitHub repository and updated throughout the semester.
+
+---
+
+# Lessons Learned
+
+Throughout this project I have gained experience with
+
+- Object-Oriented Programming
+- Graph Data Structures
+- Adjacency Lists
+- Dictionaries
+- Priority Queues
+- Dijkstra's Algorithm
+- File Processing
+- Git and GitHub
+- Software Testing
+- Algorithm Analysis
+- Big-O Performance
+
+Each milestone builds upon the previous one and demonstrates how data structures and algorithms work together to solve increasingly complex real-world problems.
+
+---
+
+# Author
+
+**Antoinette (Toni) Lurz**
+
+MS549 – Data Structures and Testing
+
+University of Advancing Technology
+
+2026

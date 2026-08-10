@@ -1,3 +1,5 @@
+from pathfinder import find_the_shortest_path
+
 #This is the Car Class for the Ride Sharing Simulation Project
 class Car:
     """
@@ -5,6 +7,7 @@ class Car:
     """
     
     def __init__(self, car_id, initial_location):
+
         """
         Creates a new Car Object.
         
@@ -18,6 +21,10 @@ class Car:
         self.status = "available"  # The status of the car, can be "available" or "unavailable" 
         self.destination = None  # The destination of the car, if it is currently on a trip
 
+        #New attributes for the car's current trip
+        self.route =[]
+        self.route_time = 0
+
     def __str__(self):
         """
         returns a readable description of the car.
@@ -25,4 +32,17 @@ class Car:
         return (
             f"Car {self.id} at {self.location}"
             f" - Status: {self.status}"
+        ) 
+
+    def calculate_route(self, destination, city_graph):
+        """
+        Calculates the shortest route using Dijkstra's algorithm.
+        """
+
+        self.destination = destination
+
+        self.route, self.route_time = find_the_shortest_path(
+            city_graph,
+            self.location,
+            destination
         )
