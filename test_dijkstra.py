@@ -12,6 +12,7 @@ def main():
     #Load the graph from a CSV file
     city_graph.load_from_file("map.csv")
 
+
     car = Car("CAR001", ("A"))  # Example car starting at node "A"
 
     car.calculate_route(("D"), city_graph)  # Example destination node "D"

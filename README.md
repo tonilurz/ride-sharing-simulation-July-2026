@@ -387,6 +387,110 @@ Tests
 - Dijkstra's Algorithm
 - Shortest path calculation
 
+## Milestone 5: Quadtree Data Structure
+
+### Overview
+
+The fifth milestone of the Ride-Sharing Simulator focuses on implementing a Quadtree data structure to efficiently locate the nearest available driver to a rider. As the number of drivers increases, searching every driver one at a time becomes inefficient. A Quadtree organizes driver locations into a hierarchy of smaller regions, allowing the system to eliminate large sections of the map that cannot contain the nearest driver. This significantly improves search performance compared to a traditional brute-force search.
+
+### Purpose
+
+The purpose of this milestone is to:
+
+- Implement a custom Quadtree data structure.
+- Store driver locations as 2D points.
+- Efficiently insert new driver locations into the tree.
+- Perform nearest-neighbor searches using recursive traversal and pruning.
+- Compare Quadtree performance against a brute-force linear search to validate both correctness and efficiency.
+
+### Files Added
+
+| File | Description |
+|------|-------------|
+| `quadtree.py` | Contains the Point, Rectangle, QuadtreeNode, and Quadtree classes used for spatial indexing and nearest-neighbor searching. |
+| `test_quadtree.py` | Standalone test program that inserts 5,000 random driver locations, performs Quadtree and brute-force searches, verifies both return the same result, and compares execution times. |
+
+### Data Structures Used
+
+- Quadtree
+- QuadtreeNode
+- Rectangle
+- Point
+- Python Lists
+- Recursive Tree Structure
+
+### Algorithms Used
+
+- Recursive insertion
+- Recursive nearest-neighbor search
+- Boundary pruning optimization
+- Brute-force nearest-neighbor comparison
+- Euclidean distance calculation
+
+### Performance
+
+The Quadtree dramatically improves search efficiency by reducing the number of points that must be examined during a nearest-neighbor search.
+
+| Search Method | Average Time Complexity |
+|---------------|------------------------|
+| Brute-Force Search | O(N) |
+| Quadtree Search | O(log N) average |
+
+The test program demonstrates the performance improvement by timing both methods and reporting the speed difference.
+
+### How to Run
+
+Run the Quadtree test program from the project directory:
+
+```bash
+python test_quadtree.py
+```
+
+### Expected Output
+
+The test program will:
+
+- Generate 5,000 random driver locations.
+- Insert every driver into the Quadtree.
+- Generate a random rider location.
+- Find the nearest driver using the Quadtree.
+- Find the nearest driver using a brute-force search.
+- Verify that both searches return the same driver.
+- Display the execution time for both search methods.
+- Display the Quadtree speed improvement.
+
+Example output:
+
+```
+QUADTREE NEAREST-NEIGHBOR TEST
+
+Number of Driver Points: 5000
+Rider Location: Point(...)
+
+QUADTREE RESULT
+Nearest Point: Point(...)
+Driver: Driver-2959
+
+BRUTE-FORCE RESULT
+Nearest Point: Point(...)
+Driver: Driver-2959
+
+TEST PASSED
+The Quadtree and brute-force search found the same nearest driver.
+
+The Quadtree search was approximately 11.47x faster than the brute-force search.
+```
+
+### Skills Demonstrated
+
+- Object-Oriented Programming
+- Recursive Algorithms
+- Spatial Data Structures
+- Performance Analysis
+- Algorithm Verification
+- Big O Time Complexity
+- Python Class Design
+- Testing and Validation
 ---
 
 ## Future Milestones
