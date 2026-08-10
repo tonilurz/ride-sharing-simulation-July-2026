@@ -216,7 +216,7 @@ Creates one Rider object
 Stores both objects in the Simulation dictionaries
 Prints the Car, Rider, Simulation, and Graph objects
 
-Example output:
+# Example output:
 
 Creating simulation and loading map...
 
@@ -246,114 +246,17 @@ Calculating optimal routes between riders and destinations
 Simulating vehicle movement through the road network
 Measuring algorithm performance and efficiency using Big-O analysis
 
+I would also recommend updating the Project Structure section of your README to reflect the new files:
 
-## Pathfinding with Dijkstra's Algorithm
+ride_sharing_simulator/
+│
+├── car.py              # Car class
+├── rider.py            # Rider class
+├── graph.py            # City map stored as an adjacency list
+├── simulation.py       # Main simulation controller
+├── test_simulation.py  # Test program
+├── city_map.csv        # Sample road network
+├── README.md           # Project documentation
+└── .gitignore
 
-### Overview
-
-This milestone adds pathfinding capabilities to the Ride-Sharing Simulator by implementing **Dijkstra's Shortest Path Algorithm**. The algorithm enables a car to determine the shortest travel route between its current location and a destination using the weighted road network stored in the Graph class.
-
-The implementation is contained in the `pathfinder.py` file and uses Python's built-in `heapq` module to create a **priority queue (min-heap)**. The priority queue always processes the node with the smallest known travel time first, making the algorithm significantly more efficient than checking every possible path.
-
-### Pathfinding Function
-
-The `pathfinder.py` file contains the function:
-
-```python
-find_the_shortest_path(graph, start_node, end_node)
-```
-
-This function:
-
-- Accepts a `Graph` object containing the city map.
-- Accepts a starting node and destination node.
-- Calculates the shortest route using Dijkstra's Algorithm.
-- Returns both the shortest path and the total travel time.
-
-Example return value:
-
-```python
-(['A', 'C', 'D'], 4.0)
-```
-
-If no route exists between the two nodes, the function returns:
-
-```python
-(None, float("inf"))
-```
-
-### How Dijkstra's Algorithm Works
-
-The algorithm performs the following steps:
-
-1. Initializes every node's distance to infinity.
-2. Sets the starting node's distance to zero.
-3. Uses a priority queue to process the closest unvisited node.
-4. Updates neighboring nodes whenever a shorter path is found.
-5. Stores predecessor information so the final path can be reconstructed.
-6. Returns the shortest route and its total travel time.
-
-This implementation works efficiently with the Graph class because the city map is stored as an adjacency list.
-
----
-
-## New Test Script
-
-A new test program named **`test_dijkstra.py`** has been added to verify that Dijkstra's Algorithm functions correctly before it is integrated into the Car class.
-
-The test script performs the following tasks:
-
-- Creates a `Graph` object.
-- Loads the city map from `map.csv`.
-- Calls `find_the_shortest_path()` with a starting node and destination.
-- Displays the calculated route and total travel time.
-
-Example output:
-
-```text
-DIJKSTRA TEST
------------------------
-Start Node: A
-Destination: D
-
-Shortest Path:
-['A', 'C', 'D']
-
-Total Travel Time:
-4.0
-```
-
----
-
-## Updated How to Run
-
-### Test the Graph
-
-Run the original simulation test:
-
-```bash
-python test_simulation.py
-```
-
-This verifies that the Graph is loaded successfully from `map.csv`.
-
-### Test Dijkstra's Algorithm
-
-Run:
-
-```bash
-python test_dijkstra.py
-```
-
-This test loads the graph, calculates the shortest path between two nodes, and displays the resulting route and travel time.
-
----
-
-## Dependencies
-
-This milestone uses only Python standard libraries.
-
-- `csv`
-- `heapq`
-
-No third-party libraries are required.
+This gives your README a polished, professional feel and clearly documents the additions made in this milestone.
