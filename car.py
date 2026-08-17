@@ -13,15 +13,24 @@ class Car:
         
         Args:
             car_id(str): The unique ID for the car.
-            initial_location(tuple): The initial location of the car as a tuple (x, y).
+            initial_location(tuple): Current physical map corrdinates (x, y).
         """
 
         self.id = car_id
-        self.location = initial_location
-        self.status = "available"  # The status of the car, can be "available" or "unavailable" 
-        self.destination = None  # The destination of the car, if it is currently on a trip
 
-        #New attributes for the car's current trip
+        #Physical location on the map
+        self.location = initial_location
+
+        #Car begins available 
+        self.status = "available" 
+
+        # Final Destination if one has been assigned 
+        self.destination = None  
+
+        # Rider currently assigned to this car
+        self.assigned_rider = None
+
+        # Attributes from the Djkstra
         self.route =[]
         self.route_time = 0
 
@@ -34,7 +43,7 @@ class Car:
             f" - Status: {self.status}"
         ) 
 
-    def calculate_route(self, destination, city_graph):
+    def calculate_route(self, destination, graph):
         """
         Calculates the shortest route using Dijkstra's algorithm.
         """
@@ -42,7 +51,7 @@ class Car:
         self.destination = destination
 
         self.route, self.route_time = find_the_shortest_path(
-            city_graph,
+            graph,
             self.location,
             destination
         )
