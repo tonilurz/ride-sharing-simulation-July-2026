@@ -1,449 +1,534 @@
 # Ride-Sharing Simulator
 
-## Project Overview
+## MS549 Data Structures and Testing
 
-This project is an **Efficient, Analyzed Ride-Sharing Simulator** developed in Python. The project is being built through a series of milestones that introduce different data structures, algorithms, and simulation concepts.
+This project is a Python-based ride-sharing simulation developed throughout the MS549 Data Structures and Testing course.
 
-The simulator currently includes:
+The project was built in milestones. Each milestone introduced a new data structure, algorithm, testing method, or simulation feature. The final version combines object-oriented programming, graphs, Dijkstra's shortest-path algorithm, Quadtrees, priority queues, discrete-event simulation, automated testing, performance metrics, and visualization.
 
-* `Car` and `Rider` classes
-* A `Simulation` controller
-* A graph-based city map
-* CSV map loading
-* Dijkstra's shortest-path algorithm
-* Quadtree spatial searching
-* Brute-force nearest-car matching
-* An event-driven simulation engine
-* A min-heap priority queue for chronological event processing
-* Placeholder Manhattan-distance navigation
-
-The project demonstrates how data structures and algorithms can be combined to model the core functionality of a ride-sharing service.
+The goal of the final project is to simulate a ride-sharing system in which riders request transportation, available cars are located efficiently, road-network travel times are calculated, and simulation events are processed chronologically.
 
 ---
 
-# Milestone 1: Car, Rider, and Simulation Classes
+# Project Overview
 
-The first milestone created the main objects used by the ride-sharing simulator.
+The final simulator models a simplified ride-sharing service.
 
-## Car Class
+The system contains:
 
-The `Car` class represents a vehicle in the ride-sharing system.
+- Cars
+- Riders
+- A city road network
+- Graph node coordinates
+- Dijkstra's shortest-path algorithm
+- A Quadtree spatial index
+- A min-heap event queue
+- Dynamic rider generation
+- Driver availability tracking
+- Pickup and dropoff events
+- Simulation performance metrics
+- Automated testing with pytest
+- Code coverage analysis
+- A simulation summary visualization
 
-Each car stores information such as:
+The final matching process uses both geographic proximity and road-network travel time.
 
-* Car ID
-* Current location
-* Current status
-* Assigned rider
-* Planned route
-* Route travel time
-
-Beginning with the Simulation Engine Prototype, a car's location is represented using physical `(x, y)` coordinates.
-
-Example:
-
-```python
-car = Car("CAR001", (0, 0))
-```
-
-A car can have statuses such as:
-
-* `available`
-* `en_route_to_pickup`
-* `en_route_to_destination`
-
-The `assigned_rider` attribute links a car to the rider it is currently serving.
+The Quadtree first identifies nearby available cars. Dijkstra's algorithm then evaluates those candidates using the road network. The available car with the lowest road travel time is selected for the rider.
 
 ---
 
-## Rider Class
-
-The `Rider` class represents a person requesting transportation.
-
-Each rider stores:
-
-* Rider ID
-* Starting location
-* Destination
-* Current status
-
-Example:
-
-```python
-rider = Rider(
-    "RIDER_A",
-    (10, 5),
-    (40, 30)
-)
-```
-
-Rider statuses include:
-
-* `waiting`
-* `in_car`
-* `completed`
-
----
-
-## Simulation Class
-
-The `Simulation` class acts as the main controller for the project.
-
-Cars and riders are stored in dictionaries using their IDs as keys.
-
-Example:
-
-```python
-self.cars = {}
-self.riders = {}
-```
-
-Using dictionaries allows cars and riders to be efficiently accessed by their unique IDs.
-
----
-
-# Milestone 2: Graph Data Structure
-
-The second milestone introduced the `Graph` class to represent the city road network.
-
-The graph uses an **adjacency list** implemented with a Python dictionary.
-
-Example:
-
-```python
-{
-    "A": [("B", 5), ("C", 3)],
-    "B": [("A", 5), ("D", 4)]
-}
-```
-
-Each dictionary key represents a map node.
-
-The value contains a list of tuples representing:
+# Project Structure
 
 ```text
-(neighbor, travel_time)
+ride_sharing_simulator/
+│
+├── car.py
+├── rider.py
+├── graph.py
+├── pathfinder.py
+├── quadtree.py
+├── simulation.py
+├── run_simulation.py
+│
+├── test_simulation.py
+├── test_dijkstra.py
+├── test_quadtree.py
+├── test_final.py
+│
+├── city_map.csv
+├── simulation_summary.png
+├── README.md
+└── .gitignore
 ```
-
-An adjacency list is appropriate because road networks are generally sparse. Most intersections connect to only a small number of other intersections.
 
 ---
 
-## Map File
+# Car Class
 
-The city map is stored in:
+The `Car` class represents an individual driver/car in the ride-sharing simulation.
+
+Each car contains information including:
+
+- Unique car ID
+- Current physical `(x, y)` location
+- Current status
+- Assigned rider
+- Current route
+- Route travel time
+- Busy start time
+- Total busy time
+- Number of completed trips
+
+A car begins with the status:
 
 ```text
-map.csv
+available
 ```
 
-The map contains directed edges between locations.
+During the simulation, its status can change as it progresses through a trip.
 
-Example:
+For example:
 
 ```text
-A,B,5
-B,A,5
-A,C,3
-C,A,3
-B,D,4
-D,B,4
-C,D,1
-D,C,1
+available
+    ↓
+en_route_to_pickup
+    ↓
+en_route_to_destination
+    ↓
+available
 ```
 
-Two entries are used to represent a two-way road.
+After completing a trip, the car's physical location becomes the rider's destination.
 
 ---
 
-## Graph Methods
+# Rider Class
 
-The Graph class includes methods such as:
+The `Rider` class represents a passenger requesting transportation.
 
-```python
-add_vertex()
+Each rider contains:
+
+- Unique rider ID
+- Pickup location
+- Destination
+- Current status
+- Request time
+- Pickup time
+- Dropoff time
+
+A rider begins with the status:
+
+```text
+waiting
 ```
 
-Adds a node to the graph if it does not already exist.
+A successful rider progresses through the simulation approximately as follows:
 
-```python
-add_edge()
+```text
+waiting
+    ↓
+in_car
+    ↓
+completed
 ```
 
-Creates a weighted connection between two nodes.
+If a rider cannot be matched with a reachable car, the rider can be recorded as unsuccessful or unmatched.
 
-```python
-load_from_file()
-```
-
-Reads the city map from `map.csv` and builds the adjacency list.
-
-```python
-__str__()
-```
-
-Returns a readable representation of the loaded graph for testing and debugging.
+The timestamps stored in the Rider object allow the simulation to calculate rider wait times and completed trip times.
 
 ---
 
-# Milestone 3: Dijkstra's Pathfinding Algorithm
+# Graph and City Road Network
 
-The third milestone added intelligent navigation to the project using **Dijkstra's shortest-path algorithm**.
+The city road network is represented using a weighted graph.
 
-The algorithm determines the fastest route between two nodes in the weighted graph.
+The graph uses an adjacency-list data structure.
 
-The pathfinding functionality is contained in:
+Conceptually, the structure looks like:
+
+```text
+Node
+  ↓
+[(Neighbor, Weight), (Neighbor, Weight), ...]
+```
+
+For example:
+
+```text
+A -> [('B', 5.0), ('C', 3.0)]
+B -> [('A', 5.0), ('D', 4.0)]
+C -> [('A', 3.0), ('D', 1.0)]
+D -> [('B', 4.0), ('C', 1.0)]
+```
+
+Each graph node also contains physical coordinates.
+
+For example:
+
+```text
+A = (0.0, 0.0)
+B = (100.0, 0.0)
+C = (0.0, 100.0)
+D = (100.0, 100.0)
+```
+
+This allows the simulator to translate a physical car or rider location into the nearest road-network vertex.
+
+---
+
+# City Map File
+
+The city map is stored in `city_map.csv`.
+
+The file contains:
+
+```text
+start_node_id,start_x,start_y,end_node_id,end_x,end_y,weight
+```
+
+Each row represents a road connection between two graph vertices.
+
+The graph loader reads:
+
+- Starting node ID
+- Starting node X coordinate
+- Starting node Y coordinate
+- Ending node ID
+- Ending node X coordinate
+- Ending node Y coordinate
+- Road weight
+
+The road weight represents the travel cost or travel time used by Dijkstra's algorithm.
+
+The city map used for development contains a small connected road network so that the simulation behavior can be inspected and tested.
+
+---
+
+# Dijkstra's Shortest-Path Algorithm
+
+The simulator uses Dijkstra's algorithm to determine the shortest road-network path between two graph vertices.
+
+The implementation is located in:
 
 ```text
 pathfinder.py
 ```
 
-The primary function is:
+The main pathfinding function is:
 
 ```python
-find_shortest_path(graph, start_node, end_node)
+find_the_shortest_path()
 ```
 
 The function returns:
 
-1. The shortest path as a list of nodes.
-2. The total travel time.
+```text
+(path, total_travel_time)
+```
 
-Example:
+For example:
 
 ```text
-Shortest Path: ['A', 'C', 'D']
-Total Travel Time: 4
+(['A', 'C', 'D'], 4.0)
 ```
+
+This means the shortest route travels:
+
+```text
+A
+↓
+C
+↓
+D
+```
+
+with a total road-network travel time of:
+
+```text
+4.0
+```
+
+The implementation uses Python's `heapq` module as a priority queue.
+
+Dijkstra's algorithm provides more realistic routing than using only straight-line or Manhattan distance.
 
 ---
 
-## Priority Queue
+# Finding the Nearest Graph Vertex
 
-Dijkstra's algorithm uses Python's `heapq` module to implement a **min-heap priority queue**.
+Cars and riders exist at physical `(x, y)` coordinates, while Dijkstra's algorithm operates on graph node IDs.
 
-The heap stores entries in the form:
+The function:
 
 ```python
-(distance, node)
+find_nearest_vertex()
 ```
 
-This allows the algorithm to efficiently process the next node with the shortest known distance.
+bridges these two representations.
+
+It determines which graph vertex is physically closest to a supplied `(x, y)` coordinate.
+
+The simulation therefore follows this general process:
+
+```text
+Physical Location
+      ↓
+Nearest Graph Vertex
+      ↓
+Dijkstra
+      ↓
+Road Travel Time
+```
 
 ---
 
-## Path Reconstruction
+# Quadtree Spatial Index
 
-A predecessor dictionary records how each node was reached.
+The project uses a Quadtree to efficiently locate nearby available cars.
 
-After reaching the destination, the algorithm follows these predecessors backward to reconstruct the complete route.
-
-If no route exists, the function returns:
-
-```python
-(None, float("inf"))
-```
-
----
-
-## Car Route Calculation
-
-The `Car` class also includes a `calculate_route()` method.
-
-The calculated results can be stored in:
-
-```python
-self.route
-self.route_time
-```
-
-This allows a car to remember its planned route and estimated travel time.
-
-The Simulation Engine Prototype uses placeholder coordinate-based navigation instead of Dijkstra's algorithm. Full integration of physical coordinates with the graph-based pathfinding system will occur in the final project milestone.
-
----
-
-# Milestone 4: Quadtree Data Structure
-
-The fourth milestone introduced a **Quadtree** for efficient two-dimensional spatial searching.
-
-The Quadtree will eventually allow the ride-sharing simulator to quickly locate cars near a rider.
-
-The implementation is contained in:
+The Quadtree is implemented in:
 
 ```text
 quadtree.py
 ```
 
-The main classes include:
+The main supporting classes are:
 
-* `Point`
-* `Rectangle`
-* `QuadtreeNode`
-* `Quadtree`
+```text
+Point
+Rectangle
+QuadtreeNode
+Quadtree
+```
 
----
+Cars are represented inside the Quadtree using `Point` objects.
 
-## Point
+A Point stores:
 
-The `Point` class represents a location on the two-dimensional city map.
+```text
+x coordinate
+y coordinate
+associated car
+```
 
-A point contains:
+The Quadtree recursively divides the physical map into smaller geographic regions.
 
-* X coordinate
-* Y coordinate
-* Optional associated data
-
-The associated data can represent information such as a driver ID or `Car` object.
-
----
-
-## Rectangle
-
-The `Rectangle` class represents the boundaries used by Quadtree nodes.
-
-It determines:
-
-* Whether a point falls inside a region.
-* The minimum squared distance between a query point and the rectangular region.
-
-This distance calculation is important for pruning unnecessary branches during nearest-neighbor searches.
+This allows the simulator to avoid searching every available car when looking for nearby drivers.
 
 ---
 
-## QuadtreeNode
+# K-Nearest Neighbor Search
 
-Each `QuadtreeNode` represents one rectangular section of the map.
-
-A node contains:
-
-* Boundary
-* Capacity
-* Stored points
-* Divided status
-* Northwest child
-* Northeast child
-* Southwest child
-* Southeast child
-
-When a node reaches capacity, it subdivides into four smaller regions.
-
----
-
-## Recursive Insertion
-
-Points are inserted recursively.
-
-If a node has available capacity, the point is stored there.
-
-When the node becomes full, it subdivides and its points are moved into the appropriate child quadrants.
-
----
-
-## Nearest-Neighbor Search
-
-The Quadtree implements:
+The final project extends the Quadtree with:
 
 ```python
-find_nearest()
+find_k_nearest()
 ```
 
-to locate the point closest to a query location.
+Instead of finding only one geographically closest car, this method returns up to `k` nearby candidates.
 
-The recursive search uses **pruning** to avoid searching regions that cannot contain a closer point.
-
-If the minimum possible distance to a region is already greater than the best distance found, that entire branch can be skipped.
-
-This provides a significant performance improvement over checking every point.
-
-A brute-force nearest-neighbor search requires:
+The default candidate count is:
 
 ```text
-O(N)
+k = 5
 ```
 
-comparisons.
+The Quadtree uses a heap to maintain the best candidates while recursively searching the tree.
 
-A well-balanced Quadtree can provide approximately:
+Branches of the Quadtree that cannot contain a better candidate can be pruned from the search.
 
-```text
-O(log N)
-```
-
-average search performance.
+This reduces unnecessary searching.
 
 ---
 
-## Quadtree Testing
+# Removing Cars from the Quadtree
 
-The file:
-
-```text
-test_quadtree.py
-```
-
-creates 5,000 random driver points and inserts them into the Quadtree.
-
-A random rider location is then generated.
-
-The test compares:
-
-1. The Quadtree nearest-neighbor result.
-2. A brute-force search through all 5,000 points.
-
-An assertion confirms that both methods locate the same point.
-
-Example result:
-
-```text
-TEST PASSED
-
-The Quadtree and brute-force search found the same nearest driver.
-```
-
-The test also compares the execution time of the two methods.
-
----
-
-# Milestone 5: Simulation Engine Prototype
-
-The **Simulation Engine Prototype** combines the project's objects into an event-driven ride-sharing simulation.
-
-The purpose of this milestone is to create the central event-processing engine before integrating the advanced Quadtree matching and Dijkstra pathfinding systems.
-
-This milestone uses simplified placeholder algorithms so the focus remains on event handling and state management.
-
----
-
-## Discrete-Event Simulation
-
-The project now uses a **Discrete-Event Simulation** model.
-
-Instead of updating every car continuously, the simulation jumps from one important event to the next.
-
-Examples of events include:
-
-```text
-RIDER_REQUEST
-ARRIVAL
-```
-
-An `ARRIVAL` event can represent either:
-
-* Arrival at the rider's pickup location.
-* Arrival at the rider's destination.
-
----
-
-## Event Priority Queue
-
-Future events are stored using Python's `heapq` module.
-
-The event queue is a **min-heap**, which automatically allows the simulation to process the event with the earliest timestamp first.
-
-Each event uses the following structure:
+The Quadtree also supports:
 
 ```python
+remove()
+```
+
+When a car is assigned to a rider, the exact Point object representing that car is removed from the Quadtree.
+
+Object identity is important during removal.
+
+The comparison uses:
+
+```python
+stored_point is point
+```
+
+rather than:
+
+```python
+stored_point == point
+```
+
+Two different cars may occupy exactly the same physical coordinates, but they are still different car objects.
+
+---
+
+# Available Car Management
+
+The Simulation maintains three related availability structures:
+
+```text
+available_cars
+available_car_points
+available_car_quadtree
+```
+
+They serve different purposes.
+
+### `available_cars`
+
+Maps a car ID to the available Car object.
+
+```text
+car ID → Car
+```
+
+### `available_car_points`
+
+Maps a car ID to the exact Point object stored in the Quadtree.
+
+```text
+car ID → Point
+```
+
+### `available_car_quadtree`
+
+Provides spatial searching for nearby available cars.
+
+These structures must remain synchronized.
+
+When a car becomes unavailable, it is removed from all availability structures.
+
+When a trip is completed, a new Point is created using the car's updated location and the car is reinserted into the availability structures.
+
+---
+
+# Adding an Available Car
+
+The simulation uses:
+
+```python
+add_available_car()
+```
+
+to add a car to the availability system.
+
+The method:
+
+1. Creates a Point representing the car's current physical location.
+2. Inserts the Point into the Quadtree.
+3. Adds the car to the available-car dictionary.
+4. Stores the exact Point object.
+5. Sets the car's status to available.
+
+The dictionaries are updated only after the Quadtree insertion succeeds.
+
+This helps keep the availability structures synchronized.
+
+---
+
+# Removing an Available Car
+
+The simulation uses:
+
+```python
+remove_available_car()
+```
+
+when a driver is assigned to a rider.
+
+The method:
+
+1. Retrieves the exact Point associated with the car.
+2. Removes that Point from the Quadtree.
+3. Removes the Point from the Point dictionary.
+4. Removes the car from the available-car dictionary.
+
+The car is therefore no longer considered during future rider matching while it is completing a trip.
+
+---
+
+# Quadtree and Dijkstra Driver Matching
+
+The final driver-matching algorithm combines two different algorithms.
+
+The Quadtree answers:
+
+```text
+Which available cars are geographically close?
+```
+
+Dijkstra answers:
+
+```text
+Which of those cars can reach the rider fastest
+using the road network?
+```
+
+The complete matching pipeline is:
+
+```text
+Rider Request
+      │
+      ▼
+Create Rider Point
+      │
+      ▼
+Quadtree
+      │
+      ▼
+Find up to k nearby available cars
+      │
+      ▼
+Convert rider location to graph vertex
+      │
+      ▼
+Convert each candidate car location
+to a graph vertex
+      │
+      ▼
+Run Dijkstra for each candidate
+      │
+      ▼
+Compare road travel times
+      │
+      ▼
+Choose lowest reachable travel time
+      │
+      ▼
+Dispatch selected car
+```
+
+This is an important design decision.
+
+The geographically closest car is not always the car with the shortest road-network travel time.
+
+The Quadtree reduces the candidate set, while Dijkstra makes the final road-based selection.
+
+---
+
+# Simulation Engine Prototype
+
+The simulation engine was originally developed as a discrete-event simulation prototype.
+
+Instead of updating every car continuously at every possible moment, the simulation jumps directly from one important event to the next.
+
+The simulation uses a min-heap priority queue implemented with Python's:
+
+```python
+heapq
+```
+
+Events use the following structure:
+
+```text
 (
     timestamp,
     sequence_number,
@@ -452,428 +537,861 @@ Each event uses the following structure:
 )
 ```
 
-The sequence number ensures events remain uniquely ordered even when multiple events have the same timestamp.
+The timestamp determines when the event occurs.
+
+The sequence number ensures events with the same timestamp can still be ordered safely.
+
+The event type determines which handler processes the event.
+
+The data field contains the object associated with the event.
 
 ---
 
-## Simulation Clock
+# Final Event Queue
 
-The Simulation class maintains an internal clock:
-
-```python
-self.current_time
-```
-
-Whenever an event is removed from the priority queue, the simulation clock advances to that event's timestamp.
-
-This allows the simulation to move directly from event to event rather than processing every individual unit of time.
-
----
-
-## Event Loop
-
-The `run()` method is the heart of the simulation engine.
-
-It continues processing events while the event heap contains scheduled events.
-
-The next event is retrieved using:
-
-```python
-heapq.heappop(self.events)
-```
-
-The simulation then determines which handler should process the event.
-
-For example:
-
-```python
-if event_type == "RIDER_REQUEST":
-    self.handle_rider_request(data)
-
-elif event_type == "ARRIVAL":
-    self.handle_arrival(data)
-```
-
-This structure allows new event types to be added as the simulation becomes more advanced.
-
----
-
-## Placeholder Car Matching
-
-The prototype uses:
-
-```python
-find_closest_car_brute_force()
-```
-
-to locate the closest available car.
-
-The method checks every available car and calculates its distance from the rider.
-
-This is an:
+The final simulation uses three primary event types:
 
 ```text
-O(N)
+RIDER_REQUEST
+PICKUP_ARRIVAL
+DROPOFF_ARRIVAL
 ```
 
-search.
+The event queue operates as:
 
-The brute-force method is intentionally being used as placeholder logic for this milestone. The final simulation will replace this with the previously developed Quadtree nearest-neighbor search.
+```text
+Event Heap
+    ↓
+Pop earliest event
+    ↓
+Advance simulation clock
+    ↓
+Determine event type
+    ↓
+Call appropriate handler
+    ↓
+Handler may schedule future events
+    ↓
+Repeat until heap is empty
+```
+
+The simulation continues until the event heap is empty.
+
+This is important because rider generation may stop while cars are still completing active trips.
+
+Those pickup and dropoff events must still be processed before the simulation finishes.
 
 ---
 
-## Placeholder Navigation
+# Dynamic Rider Generation
 
-The prototype calculates travel time using **Manhattan distance**.
+Riders are dynamically generated during the simulation.
 
-The distance between two locations is calculated as:
-
-```python
-abs(x1 - x2) + abs(y1 - y2)
-```
-
-Travel time is then calculated using:
+Rider arrivals use Python's random exponential distribution:
 
 ```python
-travel_time = distance * TRAVEL_SPEED_FACTOR
+random.expovariate()
 ```
 
-This provides simple navigation for testing the event engine.
+This provides variable intervals between rider requests.
 
-The final simulation will replace this placeholder navigation with graph-based routing using Dijkstra's algorithm.
+The simulation can limit rider generation using:
+
+- Maximum simulation generation time
+- Maximum number of riders
+
+The first rider request can be scheduled at simulation time:
+
+```text
+0
+```
+
+Each processed rider request schedules the next request when the configured limits allow it.
 
 ---
 
-## Rider Request Event
+# Rider Request Event
 
-When a rider requests a ride, the simulation:
+When a:
 
-1. Searches for the closest available car.
-2. Assigns the rider to that car.
-3. Changes the car's status to `en_route_to_pickup`.
-4. Calculates the travel time to the rider.
-5. Schedules a future `ARRIVAL` event.
-6. Logs the dispatch to the console.
-
-The rider and car are linked using:
-
-```python
-car.assigned_rider = rider
+```text
+RIDER_REQUEST
 ```
+
+event occurs, the simulation:
+
+1. Records the rider request time.
+2. Schedules the next rider request when allowed.
+3. Creates a Point at the rider's pickup location.
+4. Uses the Quadtree to retrieve nearby available-car candidates.
+5. Converts the rider location to the nearest graph vertex.
+6. Converts each candidate car location to its nearest graph vertex.
+7. Runs Dijkstra for each candidate.
+8. Ignores unreachable candidates.
+9. Chooses the reachable candidate with the lowest road travel time.
+10. Removes the selected car from the availability structures.
+11. Links the car and rider.
+12. Changes the car's status to `en_route_to_pickup`.
+13. Schedules a `PICKUP_ARRIVAL` event.
+
+If no available or reachable car can be found, the rider is recorded as unsuccessful or unmatched.
 
 ---
 
-## Pickup Event
+# Pickup Arrival Event
 
-When an `ARRIVAL` event occurs and the car has the status:
+When:
 
-```python
-en_route_to_pickup
+```text
+PICKUP_ARRIVAL
 ```
 
-the event represents a pickup.
+occurs, the simulation updates the physical and logical state of the system.
 
-The simulation:
-
-1. Retrieves the assigned rider.
-2. Updates the car's location to the rider's starting location.
-3. Changes the car status to `en_route_to_destination`.
-4. Changes the rider status to `in_car`.
-5. Calculates the travel time to the destination.
-6. Schedules another `ARRIVAL` event for the dropoff.
-
-The car's physical location is updated with:
+The car's physical location becomes:
 
 ```python
 car.location = rider.start_location
 ```
 
----
+The statuses are updated:
 
-## Dropoff Event
-
-When an `ARRIVAL` event occurs and the car has the status:
-
-```python
+```text
+Car:
+en_route_to_pickup
+        ↓
 en_route_to_destination
+
+Rider:
+waiting
+   ↓
+in_car
 ```
 
-the event represents a dropoff.
+The rider's pickup time is recorded.
 
-The simulation:
+The rider's wait time can then be calculated as:
 
-1. Updates the car's location to the rider's destination.
-2. Changes the car status back to `available`.
-3. Changes the rider status to `completed`.
-4. Removes the rider assignment from the car.
+```text
+pickup time - request time
+```
 
-The location update is:
+Dijkstra is then used again to calculate the passenger's route from the pickup location to the destination.
+
+A future:
+
+```text
+DROPOFF_ARRIVAL
+```
+
+event is scheduled using the resulting road travel time.
+
+---
+
+# Dropoff Arrival Event
+
+When:
+
+```text
+DROPOFF_ARRIVAL
+```
+
+occurs, the rider's trip is completed.
+
+The car's physical location becomes:
 
 ```python
 car.location = rider.destination
 ```
 
-The rider is then unlinked:
+The rider's status becomes:
 
-```python
-car.assigned_rider = None
+```text
+completed
 ```
+
+The rider's dropoff time is recorded.
+
+The car's:
+
+- Total busy time is updated
+- Completed trip count is increased
+- Assigned rider is removed
+
+The car is then made available again.
+
+Importantly, the old Quadtree Point is not reused.
+
+Instead:
+
+```text
+Old Point removed at dispatch
+          ↓
+Trip occurs
+          ↓
+Car reaches new destination
+          ↓
+Car location changes
+          ↓
+New Point created
+          ↓
+New Point inserted into Quadtree
+```
+
+This ensures the Quadtree always represents the current physical locations of available cars.
 
 ---
 
-## Simulation Prototype Test
+# Performance Metrics
 
-The `test_simulation.py` file creates:
+The final simulator calculates performance metrics after the event queue finishes processing.
 
-* Two cars
-* Two riders
-* Two rider request events
+Metrics include:
 
-Example starting cars:
+- Total riders generated
+- Completed riders
+- Unmatched or unsuccessful riders
+- Average rider wait time
+- Average completed trip time
+- Driver utilization
+- Trips completed by each car
 
-```python
-car_one = Car("CAR001", (0, 0))
-car_two = Car("CAR002", (80, 80))
-```
+### Average Wait Time
 
-Example riders:
-
-```python
-rider_one = Rider(
-    "RIDER_A",
-    (10, 5),
-    (40, 30)
-)
-
-rider_two = Rider(
-    "RIDER_B",
-    (75, 70),
-    (20, 60)
-)
-```
-
-The rider requests are scheduled at different simulation times:
-
-```python
-simulation.schedule_event(
-    10,
-    "RIDER_REQUEST",
-    rider_one
-)
-
-simulation.schedule_event(
-    20,
-    "RIDER_REQUEST",
-    rider_two
-)
-```
-
-The event engine then processes the requests, dispatches the cars, performs pickups, and completes the dropoffs in chronological order.
-
-A successful run produces an event sequence similar to:
+Average wait time measures how long successfully served riders waited between requesting a ride and being picked up.
 
 ```text
-TIME 10: RIDER RIDER_A requested a ride
-TIME 10: CAR CAR001 dispatched to RIDER RIDER_A
-TIME 20: RIDER RIDER_B requested a ride
-TIME 20: CAR CAR002 dispatched to RIDER RIDER_B
-TIME 25.0: CAR CAR001 picked up RIDER RIDER_A
-TIME 35.0: CAR CAR002 picked up RIDER RIDER_B
-TIME 80.0: CAR CAR001 dropped off RIDER RIDER_A
-TIME 100.0: CAR CAR002 dropped off RIDER RIDER_B
+pickup_time - request_time
 ```
 
-At the end of the simulation:
+### Average Trip Time
+
+Trip time measures the time between pickup and dropoff.
 
 ```text
-CAR001: Location = (40, 30), Status = available
-CAR002: Location = (20, 60), Status = available
-
-RIDER_A: Status = completed
-RIDER_B: Status = completed
+dropoff_time - pickup_time
 ```
 
-This demonstrates that the event engine is correctly scheduling events, processing them chronologically, updating locations, and managing car and rider states.
+### Driver Utilization
+
+Driver utilization compares the total amount of time drivers were busy with the total simulation time available across all drivers.
+
+This helps evaluate how heavily the simulated fleet was being used.
 
 ---
 
-# Project Files
+# Simulation Summary Visualization
 
-The project currently contains files including:
+The final simulation creates:
 
 ```text
-ride_sharing_simulator/
-│
-├── car.py
-├── rider.py
-├── simulation.py
-├── graph.py
-├── pathfinder.py
-├── quadtree.py
-├── map.csv
-│
-├── test_simulation.py
-├── test_dijkstra.py
-├── test_quadtree.py
-│
-├── README.md
-└── .gitignore
+simulation_summary.png
 ```
+
+using Matplotlib.
+
+The summary visualization provides a graphical representation of the completed simulation.
+
+It includes simulation information such as:
+
+- The city/map representation
+- Simulation performance metrics
+- Rider outcome information
+
+This provides a visual summary in addition to the console-based event log.
+
+---
+
+# Command-Line Controls
+
+The simulation is launched through:
+
+```text
+run_simulation.py
+```
+
+Command-line arguments allow different simulation configurations to be tested without modifying the Python source code.
+
+Available controls include:
+
+```text
+--max-time
+--num-riders
+--num-cars
+--candidate-count
+--random-seed
+--map-file
+```
+
+The candidate count controls the number of geographically nearby cars returned by the Quadtree before Dijkstra evaluates road travel times.
+
+The default candidate count is:
+
+```text
+5
+```
+
+The random seed allows a simulation run to be reproduced.
 
 ---
 
 # How to Run
 
-## Requirements
+## 1. Open the Project
 
-The project requires:
+Open the `ride_sharing_simulator` project folder in Visual Studio Code.
 
-* Python 3
-* No external packages are currently required.
+Open a PowerShell terminal.
 
-The project uses Python standard-library modules including:
+Make sure the terminal is located in the project folder.
 
-```python
-heapq
-csv
-random
-math
-time
+For example:
+
+```powershell
+cd "C:\Users\YourName\Desktop\ride_sharing_simulator"
 ```
 
 ---
 
-## Open the Project
+## 2. Activate the Virtual Environment
 
-Open a terminal in the project directory.
+If the project uses a virtual environment named `venv`, activate it with:
+
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+Your terminal should then show the virtual environment as active.
+
+---
+
+## 3. Install Required Packages
+
+The project uses Matplotlib for the final visualization:
+
+```powershell
+python -m pip install matplotlib
+```
+
+The automated testing environment uses pytest:
+
+```powershell
+python -m pip install pytest
+```
+
+For coverage analysis:
+
+```powershell
+python -m pip install pytest-cov
+```
+
+---
+
+## 4. Run the Final Simulation
+
+Run:
+
+```powershell
+python run_simulation.py
+```
+
+The program will:
+
+1. Load the city map.
+2. Create the initial fleet.
+3. Add available cars to the Quadtree.
+4. Generate rider requests.
+5. Process events chronologically.
+6. Match riders using Quadtree and Dijkstra.
+7. Process pickup events.
+8. Process dropoff events.
+9. Calculate final performance metrics.
+10. Create `simulation_summary.png`.
+
+---
+
+# Running With Custom Settings
+
+The simulation can also be run using command-line arguments.
 
 Example:
 
 ```powershell
-cd "C:\Users\Toni Lurz\Desktop\MS549 Data Structures and Testing\ride_sharing_simulator"
+python run_simulation.py --num-riders 100 --num-cars 20 --max-time 1000
 ```
 
----
-
-## Test the Graph and Original Simulation Components
-
-Run:
+To change the number of Quadtree candidates evaluated by Dijkstra:
 
 ```powershell
-python test_simulation.py
+python run_simulation.py --candidate-count 10
 ```
 
-The current version of this test also runs the **Simulation Engine Prototype**.
-
----
-
-## Test Dijkstra's Algorithm
-
-Run:
+To reproduce a simulation using a specific random seed:
 
 ```powershell
-python test_dijkstra.py
+python run_simulation.py --random-seed 42
 ```
 
-This tests the graph-based shortest-path functionality and displays the calculated route and total travel time.
-
----
-
-## Test the Quadtree
-
-Run:
-
-```powershell
-python test_quadtree.py
-```
-
-This:
-
-1. Creates a Quadtree.
-2. Generates 5,000 random driver locations.
-3. Searches for the nearest driver.
-4. Performs the same search using brute force.
-5. Compares the results.
-6. Uses an assertion to verify that both searches found the same driver.
-7. Displays the execution times for comparison.
-
-A successful test displays:
+The default candidate count remains:
 
 ```text
-TEST PASSED
-The Quadtree and brute-force search found the same nearest driver.
+k = 5
 ```
 
 ---
 
-## Run the Simulation Engine Prototype
+# Testing Strategy
 
-Run:
+Automated testing is performed using:
+
+```text
+pytest
+```
+
+The final test suite verifies the major data structures, algorithms, state transitions, and integration points of the ride-sharing simulator.
+
+Testing includes areas such as:
+
+- Graph behavior
+- Dijkstra shortest-path calculations
+- Nearest graph-vertex calculations
+- Quadtree insertion
+- Quadtree nearest-neighbor searching
+- K-nearest neighbor searching
+- Quadtree removal
+- Car availability management
+- Event scheduling
+- Rider matching
+- Pickup processing
+- Dropoff processing
+- Complete rider lifecycle
+- Unmatched rider behavior
+- Simulation metrics
+
+The testing strategy focuses on both individual components and integration between the components.
+
+---
+
+# Running the Automated Tests
+
+To run the final automated test suite:
 
 ```powershell
-python test_simulation.py
+python -m pytest test_final.py -v
 ```
 
-The prototype will:
+The completed final test suite successfully passes all tests.
 
-1. Load the city map from `map.csv`.
-2. Create the Simulation object.
-3. Create two cars with physical `(x, y)` locations.
-4. Create two riders.
-5. Add the cars and riders to the Simulation dictionaries.
-6. Schedule the rider request events.
-7. Run the event-processing loop.
-8. Dispatch the closest available cars.
-9. Process pickup events.
-10. Update the cars' locations at pickup.
-11. Process dropoff events.
-12. Update the cars' locations at dropoff.
-13. Return the cars to `available`.
-14. Mark the riders as `completed`.
-15. Print the final state of the simulation.
+Current result:
 
-A successful simulation should finish with both cars available and both riders completed.
+```text
+16 tests passed
+```
 
 ---
 
-# Current Project Architecture
+# Code Coverage
 
-The project currently demonstrates several different data structures and algorithms:
+Code coverage is measured using:
 
-| Component            | Purpose                        | Data Structure / Algorithm |
-| -------------------- | ------------------------------ | -------------------------- |
-| Cars                 | Store vehicle objects          | Dictionary                 |
-| Riders               | Store rider objects            | Dictionary                 |
-| City Map             | Represent roads                | Graph / Adjacency List     |
-| Pathfinding          | Find fastest routes            | Dijkstra's Algorithm       |
-| Pathfinding Queue    | Select next closest graph node | Min-Heap                   |
-| Spatial Search       | Find nearby drivers            | Quadtree                   |
-| Prototype Matching   | Find closest available car     | Brute-Force Search         |
-| Event Queue          | Process future events          | Min-Heap                   |
-| Prototype Navigation | Estimate travel time           | Manhattan Distance         |
+```text
+pytest-cov
+```
+
+Run the application-focused coverage test with:
+
+```powershell
+python -m pytest test_final.py -v --cov=car --cov=rider --cov=graph --cov=pathfinder --cov=quadtree --cov=simulation --cov-report=term-missing
+```
+
+Current coverage results:
+
+| Module | Coverage |
+|---|---:|
+| `car.py` | 74% |
+| `graph.py` | 72% |
+| `pathfinder.py` | 91% |
+| `quadtree.py` | 78% |
+| `rider.py` | 91% |
+| `simulation.py` | 58% |
+| **Overall** | **69%** |
+
+All final automated tests passed during this coverage run.
+
+Coverage is used as one part of the testing strategy. The project also focuses on meaningful functional tests rather than attempting to execute every line solely to achieve a higher coverage percentage.
 
 ---
 
-# Next Steps
+# Data Structures Used
 
-The Simulation Engine Prototype proves that the event-driven architecture works correctly using simplified matching and navigation.
+Several important data structures are used throughout the project.
 
-The next stage of the project will integrate the advanced components developed in earlier milestones.
+## Dictionaries
 
-The final simulator will replace:
+Dictionaries provide efficient access to cars and riders by their unique IDs.
 
-```text
-Brute-Force Matching
-        ↓
-Quadtree Matching
-```
-
-and:
+Examples include:
 
 ```text
-Manhattan-Distance Navigation
-        ↓
-Graph + Dijkstra Pathfinding
+cars
+riders
+available_cars
+available_car_points
 ```
 
-This will combine the project's individual data structures and algorithms into a complete and efficient ride-sharing simulation.
+Typical dictionary lookup is approximately:
+
+```text
+O(1)
+```
+
+average-case time complexity.
+
+---
+
+## Adjacency List
+
+The road network is represented using an adjacency list.
+
+This is efficient for representing a road network where each graph vertex connects to only a limited number of neighboring vertices.
+
+Graph storage is approximately:
+
+```text
+O(V + E)
+```
+
+where:
+
+```text
+V = vertices
+E = edges
+```
+
+---
+
+## Min-Heap / Priority Queue
+
+The discrete-event simulation uses a min-heap.
+
+Python's:
+
+```python
+heapq
+```
+
+allows the earliest event to be efficiently retrieved.
+
+Event insertion and removal are approximately:
+
+```text
+O(log N)
+```
+
+where `N` is the number of events currently in the queue.
+
+---
+
+## Quadtree
+
+The Quadtree provides a spatial index for available cars.
+
+Instead of performing a brute-force scan of the entire fleet for every rider, the Quadtree can eliminate geographic regions that cannot contain better candidates.
+
+This makes the structure valuable as the number of available cars increases.
+
+---
+
+# Algorithm Design
+
+The final system deliberately separates geographic searching from road-network routing.
+
+A simple brute-force matching approach would compare every available driver for every request.
+
+Instead, the final simulator uses:
+
+```text
+Quadtree
+    ↓
+Small geographic candidate set
+    ↓
+Dijkstra
+    ↓
+Road-based comparison
+```
+
+This combines the strengths of both algorithms.
+
+The Quadtree reduces the search space.
+
+Dijkstra determines the actual road-network travel cost.
+
+The result is a more efficient and realistic driver-matching strategy than using either simple straight-line distance or a full Dijkstra search for every available driver.
+
+---
+
+# Final Simulation Architecture
+
+The central workflow of the completed system is:
+
+```text
+Generate Rider
+      │
+      ▼
+RIDER_REQUEST
+      │
+      ▼
+Quadtree
+      │
+      ▼
+Find k geographically close
+available cars
+      │
+      ▼
+Dijkstra
+      │
+      ▼
+Evaluate road travel time
+for each candidate
+      │
+      ▼
+Select best reachable car
+      │
+      ▼
+Remove car from availability
+and Quadtree
+      │
+      ▼
+PICKUP_ARRIVAL
+      │
+      ▼
+Update car location
+      │
+      ▼
+Dijkstra passenger route
+      │
+      ▼
+DROPOFF_ARRIVAL
+      │
+      ▼
+Update car to rider destination
+      │
+      ▼
+Create new Quadtree Point
+      │
+      ▼
+Return car to availability
+      │
+      ▼
+Calculate final metrics
+      │
+      ▼
+Create simulation_summary.png
+```
+
+---
+
+# Development Milestones
+
+The project was developed incrementally throughout the course.
+
+## Milestone 1: Object-Oriented Foundation
+
+Created the initial:
+
+- `Car` class
+- `Rider` class
+- `Simulation` class
+
+Cars and riders were stored in dictionaries using their unique IDs.
+
+This established the object-oriented foundation for the simulator.
+
+---
+
+## Milestone 2: Graph Data Structure
+
+Created the Graph class and adjacency-list representation of the road network.
+
+This provided the data structure needed for later pathfinding.
+
+---
+
+## Milestone 3: Graph Integration
+
+Expanded the graph implementation and map-loading functionality.
+
+The simulation could load road connections from a map file and represent the road network in memory.
+
+---
+
+## Milestone 4: Dijkstra Pathfinding
+
+Implemented Dijkstra's shortest-path algorithm.
+
+Cars could calculate routes through the graph and determine the total cost of a route.
+
+This milestone introduced priority-queue-based pathfinding using `heapq`.
+
+---
+
+## Milestone 5: Quadtree Spatial Searching
+
+Implemented the Quadtree spatial data structure.
+
+The Quadtree stores Point objects and supports efficient geographic searching.
+
+Nearest-neighbor searching was tested against brute-force searching to verify correctness and compare performance.
+
+---
+
+## Milestone 6: Simulation Engine Prototype
+
+Implemented the discrete-event simulation engine.
+
+This milestone introduced:
+
+- Min-heap event scheduling
+- Simulation timestamps
+- Rider request events
+- Placeholder driver matching
+- Pickup arrivals
+- Dropoff arrivals
+- Car/rider state management
+
+This prototype proved that the event engine could correctly process an entire ride from request through completion.
+
+---
+
+## Milestone 7: Final Integrated Ride-Sharing Simulator
+
+The final milestone replaces the placeholder algorithms with the advanced components created during earlier milestones.
+
+The final simulator integrates:
+
+- Graph road-network representation
+- Physical graph-node coordinates
+- Dijkstra pathfinding
+- Quadtree spatial searching
+- K-nearest candidate searching
+- Exact Point removal
+- Dynamic rider generation
+- Event-driven simulation
+- Driver availability management
+- Pickup and dropoff events
+- Performance metrics
+- Command-line configuration
+- Automated pytest testing
+- Code coverage analysis
+- Final visualization
+
+The result is a cohesive multi-component ride-sharing simulation.
+
+---
+
+# Final Results
+
+The final simulator successfully demonstrates the complete ride-sharing lifecycle.
+
+A typical successful trip follows:
+
+```text
+Rider generated
+      ↓
+Rider requests ride
+      ↓
+Nearby drivers found
+      ↓
+Road routes evaluated
+      ↓
+Driver selected
+      ↓
+Driver removed from availability
+      ↓
+Driver reaches pickup
+      ↓
+Rider enters car
+      ↓
+Passenger route calculated
+      ↓
+Driver reaches destination
+      ↓
+Rider completed
+      ↓
+Driver returned to availability
+```
+
+The simulation also produces final performance metrics and a graphical summary of the run.
+
+Automated testing verifies the important components of the final system.
+
+Current automated testing result:
+
+```text
+16 tests passed
+69% overall application code coverage
+91% pathfinder coverage
+78% Quadtree coverage
+91% Rider coverage
+```
+
+---
+
+# Technologies Used
+
+- Python 3.10
+- Visual Studio Code
+- Git
+- GitHub
+- `heapq`
+- `collections`
+- `itertools`
+- `random`
+- `argparse`
+- Matplotlib
+- pytest
+- pytest-cov
+
+---
+
+# Key Concepts Demonstrated
+
+This project demonstrates the practical use and integration of:
+
+- Object-oriented programming
+- Encapsulation
+- Dictionaries
+- Tuples
+- Graphs
+- Adjacency lists
+- Weighted graphs
+- Priority queues
+- Min-heaps
+- Dijkstra's algorithm
+- Quadtrees
+- Spatial searching
+- K-nearest neighbor searching
+- Discrete-event simulation
+- Event-driven programming
+- State management
+- Random event generation
+- Command-line interfaces
+- Performance measurement
+- Automated unit and integration testing
+- Code coverage analysis
+- Data visualization
+- Big O analysis
+
+---
+
+# Conclusion
+
+This project demonstrates how multiple data structures and algorithms can be combined to solve a larger computational problem.
+
+The project began with basic Car and Rider objects and progressively added a graph, Dijkstra's shortest-path algorithm, a Quadtree, a priority-queue-based event engine, automated testing, and performance analysis.
+
+The final simulator uses the Quadtree to efficiently identify geographically close available cars and Dijkstra's algorithm to determine which candidate has the best road-network travel time.
+
+The discrete-event simulation then manages rider requests, driver dispatches, pickups, dropoffs, state changes, and driver availability until all scheduled events have been processed.
+
+The final result demonstrates how selecting appropriate data structures and algorithms can improve the organization, efficiency, testability, and performance of a multi-component software system.
